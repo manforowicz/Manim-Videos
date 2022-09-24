@@ -86,11 +86,12 @@ class NChooseK(VGroup):
 
 
 class MoneyTree(VGroup):
-    def __init__(self, ax, multiplicative=True, **kwargs):
+    def __init__(self, ax, multiplicative=True, kelly=False, **kwargs):
         super().__init__(**kwargs)
-        layers = ax.x_range[1] + 1
+        layers = min(ax.x_range[1] + 1, 20)
         self.ax = ax
         self.multiplicative = multiplicative
+        self.kelly = kelly
 
         for layer in range(layers):
             for losses in range(layer+1):
@@ -115,8 +116,10 @@ class MoneyTree(VGroup):
     def get_point(self, gains, losses):
         if self.multiplicative:
             y = 100 * 1.8 ** gains * 0.5 ** losses
-        else:
+        elif not self.kelly:
             y = 100 + 40 * gains - 25 * losses
+        else:
+            y = 100 * 1.3 ** gains * 0.8125 ** losses
         return self.ax.coords_to_point(gains+losses, y)
 
     def link(self, a, b, color):
@@ -298,7 +301,8 @@ class Simulation(Scene):
             Tex("tosses"), edge=DOWN, direction=DOWN)
         y_label = ax.get_y_axis_label(
             Tex(r"\$"), direction=UL)
-        start = Tex("Start: \\$100", font_size=36).next_to(ax.c2p(0, 100), LEFT)
+        start = Tex("Start: \\$100", font_size=36).next_to(
+            ax.c2p(0, 100), LEFT)
 
         self.play(Write(ax), Write(x_label), Write(y_label), Write(start))
 
@@ -687,8 +691,6 @@ class DecisionTree(Scene):
                         color=RED, stroke_width=10)
             gain = Line(home, gain,
                         color=BLUE, stroke_width=10)
-            
-            
 
             self.play(Create(home), Flash(home),
                       ShowPassingFlash(gain, time_width=2),
@@ -737,7 +739,8 @@ class DecisionTree(Scene):
         self.play(GrowFromCenter(fixed))
         self.split()
 
-        self.play(FadeOut(all_wealth), FadeOut(cross), FadeOut(fixed), FadeOut(back))
+        self.play(FadeOut(all_wealth), FadeOut(
+            cross), FadeOut(fixed), FadeOut(back))
         self.split()
 
         self.play(
@@ -1134,6 +1137,8 @@ class NewSim(Scene):
             stroke_width=8
         )
 
+        money_tree = MoneyTree(ax, multiplicative=False, kelly=True)
+
         self.play(FadeIn(avg_graph))
         self.split()
         self.play(FadeIn(median_graph))
@@ -1145,6 +1150,10 @@ class NewSim(Scene):
             color=ORANGE
         ).next_to(ax.c2p(50, median[50]), UP).shift(UP + LEFT*0.5)
         self.play(Write(value), FadeIn(good))
+        self.split()
+        self.play(FadeIn(money_tree))
+        self.split()
+        self.play(FadeOut(money_tree))
         self.split()
 
         kelly = MathTex(
