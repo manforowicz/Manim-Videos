@@ -1,5 +1,5 @@
 # Manim-Videos
-Code I use to animate my mathematics videos.
+Code I use to animate my mathematics videos. Note: I can't guarantee that all of it works, or that it's understandable.
 
 ## How to View a Scene
 1. Install the dependency, [Manim Community](https://github.com/ManimCommunity/manim), by following their [instructions](https://docs.manim.community/en/stable/installation.html).
